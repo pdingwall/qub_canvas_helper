@@ -58,14 +58,10 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
 To run this project, you need the following:
 
 - **Python 3.x**
-- 
 - **Pandas**
-- 
 - **Requests**
-- 
 - **Access to Canvas API**
   - You'll need an API token from your institution's Canvas instance to interact with the Canvas API.
-
 - **Excel File with Student Data**
   - Specific data formats must be followed for each manager.
 
