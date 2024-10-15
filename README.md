@@ -97,3 +97,15 @@ The script assumes the API token is an environment variable. To do this on Windo
      echo %CANVAS_API_TOKEN%
      ```
    - If the variable was set correctly, you should see your Canvas API token printed to the screen.
+   
+## Installation
+
+To install and use the `qub_canvas_helper` package from this repository, follow these steps:
+
+### 1. Clone the Repository
+
+First, clone the repository to your local machine:
+
+```bash
+git clone https://github.com/pdingwall/qub_canvas_helper.git
+cd qub_canvas_helper
