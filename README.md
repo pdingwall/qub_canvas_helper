@@ -5,7 +5,7 @@ This project is designed to automate the process of Canvas admin tasks.
 ## Features
 Example Jupyter Notebooks are provided demonstrating the use of the following features.
 
-### Assignments (assignment_manager)
+### Assignment
 
 - **`get_students_in_module()`**
   - Fetches all students enrolled in a specific Canvas course.
@@ -31,7 +31,7 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
 - **`assign_assignment_to_student(student_id, student_name, assignment_id, due_date)`**
   - Creates an assignment override for a specific student.
 
-### Calendars (calendar_manager)
+### Calendar
 
 - **`create_canvas_event(self, title, description, start_date, end_date, location)`**
   - Creates a new calendar event in Canvas with the specified `title`, `description`, `start_date`, `end_date`, and `location`.
@@ -53,6 +53,12 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
   - Removes all calendar events from a Canvas course within the specified date range.
   - Confirms successful deletion by event title, time, and location.
 
+## Outlook_Calendar
+
+- **`create_outlook_calendar(self, df, calendar_name)`**
+  - Creates an ics calendar file from the dataframe (df) to then be imported into Outlook.
+  - Ideal usage to follow on using the dataframe for the Calendar class.
+
 ## Requirements
 
 To run this project, you need the following:
@@ -60,6 +66,7 @@ To run this project, you need the following:
 - **Python 3.x**
 - **Pandas**
 - **Requests**
+- **ics**
 - **Access to Canvas API**
   - You'll need an API token from your institution's Canvas instance to interact with the Canvas API.
 - **Excel File with Student Data**
@@ -109,3 +116,10 @@ First, clone the repository to your local machine:
 ```bash
 git clone https://github.com/pdingwall/qub_canvas_helper.git
 cd qub_canvas_helper
+
+### 2. Install the Package in Editable Mode
+Once the product structure and setup.py file are in place, be sure you are in the root directory (i.e. the qub_canvas_helper folder) and run:
+
+```bash
+pip install -e .
+```

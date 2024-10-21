@@ -1,6 +1,8 @@
 import pandas as pd
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+from ics import Calendar as Calendar_ics
+from ics import Event
 
 class Calendar:
     """
@@ -304,9 +306,71 @@ class Calendar:
             else:
                 print(f"Failed to remove event {event['title']} (ID: {event_id}) {formatted_time}. Response: {delete_response.json()}")
 
+    
+    ########################################### THE FUNCTIONS BELOW ARE FOR CREATING OUTLOOK CALENDARS ################################################
 
 
+class Outlook_Calendar:
+    """
+    A class to handle the creation of ICS calendar files from a DataFrame for Outlook.
+    """
+    
+    def combine_date_time(self, date, time):
+        """
+        Combines a date and time into a single datetime object.
 
+        Args:
+            date (datetime.date): The date value.
+            time (datetime.time or str): The time value, which can be either a datetime.time object or a string
+                                         in '%H:%M:%S' format.
+
+        Returns:
+            datetime.datetime: A combined datetime object with the specified date and time.
+        """
+        # Check if time is a string, then parse it
+        if isinstance(time, str):
+            time = datetime.strptime(time, '%H:%M:%S').time()
+        return datetime.combine(date, time)
+    
+    def create_outlook_calendar(self, df, calendar_name):
+        """
+        Creates an ICS calendar from a DataFrame and saves it to a file.
+
+        Args:
+            df (pd.DataFrame): A DataFrame where each row contains the following columns:
+                               - 'EventName': The name/title of the event.
+                               - 'Date': The date of the event.
+                               - 'Start Time': The start time of the event.
+                               - 'End Time': The end time of the event.
+                               - 'Room': The location of the event.
+            calendar_name (str): The full name (including path) of the .ics calendar file.
+        
+        Returns:
+            None: Saves the ICS calendar to the specified file.
+        """
+        # Initialize the calendar
+        calendar = Calendar_ics()
+
+        # Loop through each row and create an event
+        for index, row in df.iterrows():
+            event = Event()
+            
+            # Use .get() to avoid KeyErrors if columns are missing
+            event.name = str(row.get('EventName', 'Unnamed Event'))
+            event.begin = self.combine_date_time(row['Date'], row['Start Time'])
+            event.end = self.combine_date_time(row['Date'], row['End Time'])
+            event.location = str(row.get('Room', 'No Location'))
+
+            # Custom category for the event
+            event.categories = ["Lectures"]
+            
+            calendar.events.add(event)
+        
+        # Save the calendar to the specified file
+        with open(f"{calendar_name}.ics", 'w') as f:
+            f.writelines(calendar)
+        
+        print(f"Calendar {calendar_name}.ics created")
 
     
     ########################################### THE FUNCTIONS BELOW DO NOT (YET) WORK ################################################
