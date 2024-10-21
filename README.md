@@ -5,7 +5,7 @@ This project is designed to automate the process of Canvas admin tasks.
 ## Features
 Example Jupyter Notebooks are provided demonstrating the use of the following features.
 
-### Assignment
+### Assignment (CanvasAssignmentManager)
 
 - **`get_students_in_module()`**
   - Fetches all students enrolled in a specific Canvas course.
@@ -31,7 +31,7 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
 - **`assign_assignment_to_student(student_id, student_name, assignment_id, due_date)`**
   - Creates an assignment override for a specific student.
 
-### Calendar
+### Calendar (CanvasCalendarManager)
 
 - **`create_canvas_event(self, title, description, start_date, end_date, location)`**
   - Creates a new calendar event in Canvas with the specified `title`, `description`, `start_date`, `end_date`, and `location`.
@@ -53,7 +53,7 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
   - Removes all calendar events from a Canvas course within the specified date range.
   - Confirms successful deletion by event title, time, and location.
 
-### Outlook_Calendar
+### Outlook_Calendar (CanvasOutlookCalendarManager)
 
 - **`create_outlook_calendar(self, df, calendar_name)`**
   - Creates an ics calendar file from the dataframe (df) to then be imported into Outlook.
