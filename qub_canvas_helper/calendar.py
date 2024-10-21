@@ -1,10 +1,10 @@
 import pandas as pd
 import requests
 from datetime import datetime, timedelta
-from ics import Calendar as Calendar_ics
+from ics import Calendar
 from ics import Event
 
-class Calendar:
+class CanvasCalendarManager:
     """
     A class to handle the creation of calendar events in a Canvas course.
 
@@ -349,7 +349,7 @@ class Outlook_Calendar:
             None: Saves the ICS calendar to the specified file.
         """
         # Initialize the calendar
-        calendar = Calendar_ics()
+        calendar = Calendar()
 
         # Loop through each row and create an event
         for index, row in df.iterrows():

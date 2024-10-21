@@ -2,7 +2,7 @@ import pandas as pd
 import requests
 from datetime import datetime
 
-class Assignments:
+class CanvasAssignmentManager:
 	
     """
     A class to handle assignment-related tasks for a Canvas course, including
