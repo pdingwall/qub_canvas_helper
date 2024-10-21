@@ -310,7 +310,7 @@ class CanvasCalendarManager:
     ########################################### THE FUNCTIONS BELOW ARE FOR CREATING OUTLOOK CALENDARS ################################################
 
 
-class Outlook_Calendar:
+class CanvasOutlookCalendarManager:
     """
     A class to handle the creation of ICS calendar files from a DataFrame for Outlook.
     """
