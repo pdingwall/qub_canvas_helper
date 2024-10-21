@@ -53,7 +53,7 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
   - Removes all calendar events from a Canvas course within the specified date range.
   - Confirms successful deletion by event title, time, and location.
 
-## Outlook_Calendar
+### Outlook_Calendar
 
 - **`create_outlook_calendar(self, df, calendar_name)`**
   - Creates an ics calendar file from the dataframe (df) to then be imported into Outlook.
@@ -116,6 +116,7 @@ First, clone the repository to your local machine:
 ```bash
 git clone https://github.com/pdingwall/qub_canvas_helper.git
 cd qub_canvas_helper
+'''
 
 ### 2. Install the Package in Editable Mode
 Once the product structure and setup.py file are in place, be sure you are in the root directory (i.e. the qub_canvas_helper folder) and run:
