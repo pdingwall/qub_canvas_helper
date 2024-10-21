@@ -116,7 +116,7 @@ First, clone the repository to your local machine:
 ```bash
 git clone https://github.com/pdingwall/qub_canvas_helper.git
 cd qub_canvas_helper
-'''
+```
 
 ### 2. Install the Package in Editable Mode
 Once the product structure and setup.py file are in place, be sure you are in the root directory (i.e. the qub_canvas_helper folder) and run:
