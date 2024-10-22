@@ -87,8 +87,6 @@ class CanvasGroupManager:
     
         existing_groups = response.json()
         return [group['name'] for group in existing_groups]
-
-
     
     def create_groups_in_sets(self, group_set_ids, group_names):
         """
@@ -127,44 +125,6 @@ class CanvasGroupManager:
             all_created_groups[group_set_id] = [{'name': group['name'], 'id': group['id']} for group in created_groups]
     
         return all_created_groups
-    
-
-    
-    
-    
-    def create_groups_in_set_SINGLE(self, group_set_id, group_names):
-        """
-        Creates groups under the specified group set based on a provided list, avoiding duplicate group names.
-    
-        Args:
-            group_set_id (int): The ID of the group set in which to create the groups.
-            group_names (list of str): A list of group names to create.
-    
-        Returns:
-            list: A list of dictionaries with information about the created groups.
-        """
-        # Fetch existing group names in the group set to avoid duplicates
-        existing_group_names = self.get_groups_in_set(group_set_id)
-    
-        created_groups = []
-        for group_name in group_names:
-            if group_name in existing_group_names:
-                print(f"Group '{group_name}' already exists, skipping creation.")
-                continue
-            
-            # Create the group if it doesn't exist
-            url = f"{self.canvas_domain}/api/v1/group_categories/{group_set_id}/groups"
-            data = {"name": group_name}
-            create_response = requests.post(url, headers=self.headers, json=data)
-            if create_response.status_code in [200, 201]:
-                print(f"Group '{group_name}' created successfully.")
-                created_groups.append(create_response.json())
-            else:
-                print(f"Failed to create group '{group_name}': {create_response.status_code}, {create_response.text}")
-            
-        # Optionally, return only the group names and IDs, not the full JSON
-        return [{'name': group['name'], 'id': group['id']} for group in created_groups]
-
 
     def delete_all_groups_in_set(self, group_set_id):
         """
