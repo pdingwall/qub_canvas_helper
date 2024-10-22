@@ -30,6 +30,14 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
 
 - **`assign_assignment_to_student(student_id, student_name, assignment_id, due_date)`**
   - Creates an assignment override for a specific student.
+ 
+- **`assign_assignments_to_group_sets(assignment_ids, assignments_dict, practicals_and_postlabs_dict, groups_dict, custom_practical_dates, submission_length_days)`**
+  - For working with Groups.
+  - Assigns each specified assignment to the correct group within the group set with "Assign grades to each student individually" option ticked, based on the provided custom practical dates and submission length.
+ 
+- **`remove_group_assignments(assignment_ids)`**
+  - For working with Groups.
+  - Removes all group assignments from the specified list of assignments in Canvas by deleting assignment overrides.
 
 ### Calendar (CanvasCalendarManager)
 
@@ -52,6 +60,10 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
 - **`remove_calendar_events(start_date=None, end_date=None)`**
   - Removes all calendar events from a Canvas course within the specified date range.
   - Confirms successful deletion by event title, time, and location.
+
+- **`create_practical_calendar_events(custom_practical_dates, lab_timetable_df, practicals_and_postlabs_dict, groups_dict)`**
+  - For working with Groups.
+  - Creates calendar events for each group based on practical dates and lab timetable information.
 
 ### Outlook_Calendar (CanvasOutlookCalendarManager)
 

@@ -26,9 +26,103 @@ class CanvasCalendarManager:
         self.canvas_domain = canvas_domain
         self.access_token = access_token
         self.course_id = course_id
+  
+    def create_canvas_event(self, title, description, start_date, end_date, location, group_id):
+        """
+        Creates a calendar event in the specified Canvas course.
+    
+        Args:
+            title (str): The title of the event.
+            description (str): A description of the event.
+            start_date (datetime): The start date and time of the event as a datetime object.
+            end_date (datetime): The end date and time of the event as a datetime object.
+            location (str): The location of the event.
+            group_id (int): The ID of the group the event is assigned to.
+    
+        Returns:
+            response (requests.Response): The response object from the Canvas API request.
+        
+        Raises:
+            Exception: If the API request fails.
+        """
+        url = f"{self.canvas_domain}/api/v1/calendar_events"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "calendar_event": {
+                "context_code": f"group_{group_id}",
+                "title": title,
+                "description": description,
+                "start_at": start_date.isoformat(),
+                "end_at": end_date.isoformat(),
+                "location_name": location
+            }
+        }
+    
+        response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code not in [200, 201]:
+            raise Exception(f"Failed to create event: {response.status_code}, {response.text}")
+        
+        return response
 
 
-    def create_canvas_event(self, title, description, start_date, end_date, location):
+
+
+
+    def create_canvas_event_APIDEBUG(self, title, description, start_date, end_date, location, group_id):
+        """
+        Creates a calendar event in the specified Canvas course.
+    
+        Args:
+            title (str): The title of the event.
+            description (str): A description of the event.
+            start_date (datetime): The start date and time of the event as a datetime object.
+            end_date (datetime): The end date and time of the event as a datetime object.
+            location (str): The location of the event.
+            group_id (int): The ID of the group the event is assigned to.
+    
+        Returns:
+            response (requests.Response): The response object from the Canvas API request.
+        
+        Raises:
+            Exception: If the API request fails.
+        """
+        url = f"{self.canvas_domain}/api/v1/calendar_events"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "calendar_event": {
+                "context_code": f"group_{group_id}",
+                "title": title,
+                "description": description,
+                "start_at": start_date.isoformat(),
+                "end_at": end_date.isoformat(),
+                "location_name": location
+            }
+        }
+    
+        response = requests.post(url, headers=headers, json=payload)
+        
+        # Print full response for debugging
+        print(f"API Response Status: {response.status_code}")
+        print(f"Response JSON: {response.json()}")
+    
+        if response.status_code not in [200, 201]:
+            raise Exception(f"Failed to create event: {response.status_code}, {response.text}")
+        
+        return response
+
+    
+
+
+    
+    # Function below works with previous approach, the one above has replaced it but needs testing...    
+    def create_canvas_event_NO_GROUP(self, title, description, start_date, end_date, location):
         """
         Creates a calendar event in the specified Canvas course.
 
@@ -306,7 +400,118 @@ class CanvasCalendarManager:
             else:
                 print(f"Failed to remove event {event['title']} (ID: {event_id}) {formatted_time}. Response: {delete_response.json()}")
 
+
+
+
+########################################################## Below are function to work with groups #########################################################
+
+    def create_practical_calendar_events(self, custom_practical_dates, lab_timetable_df, practicals_and_postlabs_dict, groups_dict):
+        """
+        Creates calendar events for each group based on practical dates and lab timetable information.
     
+        Args:
+            custom_practical_dates (pd.DataFrame): DataFrame containing practicals and their corresponding groups for specific dates.
+            lab_timetable_df (pd.DataFrame): DataFrame containing details of lab sessions including date, start time, end time, and location.
+            practicals_and_postlabs_dict (dict): Dictionary mapping practicals to their corresponding post-lab assignments.
+            groups_dict (dict): Dictionary mapping practicals to their corresponding groups with group names and IDs.
+    
+        Returns:
+            None
+        """
+        # Loop through each column (which represents a date) in custom_practical_dates
+        for date_column in custom_practical_dates.columns[2:]:
+            # Loop through each row (each practical) in custom_practical_dates
+            for _, row in custom_practical_dates.iterrows():
+                practical_name = row['Practical']
+                group_name = row[date_column]
+                
+                # Find the corresponding group ID in the groups_dict
+                group_id = groups_dict.get(practical_name, {}).get(group_name)
+                if not group_id:
+                    print(f"Group '{group_name}' not found in '{practical_name}'.")
+                    continue
+    
+                # Find the corresponding lab session details from lab_timetable_df
+                lab_session = lab_timetable_df[lab_timetable_df['Date'] == date_column].iloc[0]
+                start_datetime = pd.to_datetime(date_column).replace(hour=lab_session['Start Time'].hour,
+                                                                     minute=lab_session['Start Time'].minute)
+                end_datetime = pd.to_datetime(date_column).replace(hour=lab_session['End Time'].hour,
+                                                                   minute=lab_session['End Time'].minute)
+                location = lab_session['Room']
+    
+                # Create the calendar event
+                event_data = {
+                    "title": f"{practical_name} Practical",
+                    "description": f"Practical session for {practical_name} - Group {group_name}",
+                    "start_date": start_datetime,
+                    "end_date": end_datetime,
+                    "location": location,
+                }
+
+                # Call create_canvas_event with group ID
+                response = self.create_canvas_event(
+                    title=event_data["title"],
+                    description=event_data["description"],
+                    start_date=event_data["start_date"],
+                    end_date=event_data["end_date"],
+                    location=event_data["location"],
+                    group_id=group_id  # Pass the group ID here
+                )
+                
+                # Print response or confirmation
+                if response.status_code in [200, 201]:
+                    print(f"Event created for group '{group_name}' in practical '{practical_name}'.")
+                else:
+                    print(f"Failed to create event for group '{group_name}' in practical '{practical_name}'. Response: {response.text}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ########################################### THE FUNCTIONS BELOW ARE FOR CREATING OUTLOOK CALENDARS ################################################
 
 
@@ -423,7 +628,4 @@ class CanvasOutlookCalendarManager:
     
         # Return the DataFrame with the course timetable (events)
         return df_timetable
-
-   
-
 

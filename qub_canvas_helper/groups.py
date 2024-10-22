@@ -227,3 +227,15 @@ class CanvasGroupManager:
                     print(f"Student {row['name']} (ID: {student_id}) successfully assigned to '{group_name}' in '{group_set}'")
                 else:
                     print(f"Failed to assign Student {row['name']} (ID: {student_id}) to '{group_name}' in '{group_set}': {response.status_code}, {response.text}")
+
+
+
+
+
+
+
+
+
+
+
+

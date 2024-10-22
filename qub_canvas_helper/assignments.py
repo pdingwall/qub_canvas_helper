@@ -1,6 +1,6 @@
 import pandas as pd
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class CanvasAssignmentManager:
 	
@@ -333,47 +333,115 @@ class CanvasAssignmentManager:
             print(f"Failed to assign assignment {assignment_id} to student {student_name} ({student_id}). Response: {response.json()}")
 
 
-    ################## TO DELETE #########################
+########################################################## Below are function to work with groups #########################################################
 
-    
-    def check_student_enrollment_OLD(self, df_students):
+    def assign_assignments_to_group_sets(self, assignment_ids, assignments_dict, practicals_and_postlabs_dict, groups_dict, custom_practical_dates, submission_length_days):
         """
-        Check if all students in the provided DataFrame are enrolled in the Canvas course.
+        Assigns each specified assignment to the correct group within the group set with "Assign grades to each student individually" option ticked,
+        based on the provided custom practical dates and submission length.
     
         Args:
-            df_students (pd.DataFrame): DataFrame containing student IDs and names.
+            assignment_ids (list): List of assignment IDs to be assigned to groups.
+            assignments_dict (dict): A dictionary mapping assignment names to Canvas assignment IDs.
+            practicals_and_postlabs_dict (dict): A dictionary mapping lab group names to post-lab assignment names.
+            groups_dict (dict): A dictionary mapping lab group names to their corresponding group names and IDs.
+            custom_practical_dates (pd.DataFrame): DataFrame containing practicals and their associated groups on different dates.
+            submission_length_days (int): Number of days between the practical date and the assignment submission date.
     
         Returns:
-            None: Prints out the result of the enrollment check.
-    
-        Raises:
-            Exception: If the API call to Canvas fails.
+            None
         """
-        url = f"{self.canvas_domain}/api/v1/courses/{self.course_id}/enrollments"
+        # Define headers inside the function
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json"
         }
-        response = requests.get(url, headers=headers)
     
-        if response.status_code != 200:
-            raise Exception(f"Failed to fetch enrollments: {response.text}")
+        # Loop through each assignment ID
+        for assignment_id in assignment_ids:
+            # Step 1: Find the corresponding assignment name
+            assignment_name = next((name for name, id in assignments_dict.items() if id == assignment_id), None)
+            if not assignment_name:
+                print(f"Assignment ID {assignment_id} not found in assignments_dict.")
+                continue
     
-        enrolled_students = response.json()
-        enrolled_students_info = {student["user"]["id"]: student["user"]["name"] for student in enrolled_students if student["type"] == "StudentEnrollment"}
-        excel_students_info = dict(zip(df_students['id'], df_students['name']))
+            # Step 2: Get the practical name and corresponding lab group from practicals_and_postlabs_dict
+            practical_name = next((practical for practical, post_lab in practicals_and_postlabs_dict.items() if post_lab == assignment_name), None)
+            if not practical_name:
+                print(f"Practical not found for assignment '{assignment_name}'.")
+                continue
     
-        missing_in_canvas = set(excel_students_info.keys()) - set(enrolled_students_info.keys())
-        missing_in_excel = set(enrolled_students_info.keys()) - set(excel_students_info.keys())
+            # Step 3: Loop through the columns in custom_practical_dates to assign based on date
+            for date_col in custom_practical_dates.columns[1:]:
+                # Find the group assigned to the current practical for the specific date
+                group_name = custom_practical_dates.loc[custom_practical_dates['Practical'] == practical_name, date_col].values[0]
     
-        if not missing_in_canvas and not missing_in_excel:
-            print("All students are accounted for.")
-        else:
-            if missing_in_canvas:
-                print("Students in Excel but not enrolled in Canvas:")
-                for student_id in missing_in_canvas:
-                    print(f"- {excel_students_info[student_id]} (ID: {student_id})")
-            if missing_in_excel:
-                print("Students enrolled in Canvas but not in Excel:")
-                for student_id in missing_in_excel:
-                    print(f"- {enrolled_students_info[student_id]} (ID: {student_id})")
+                # Calculate the submission date as `submission_length_days` days after the practical date
+                practical_date = pd.to_datetime(date_col)
+                submission_date = practical_date + pd.Timedelta(days=submission_length_days)
+    
+                # Step 4: Find the matching group ID from groups_dict
+                group_id = groups_dict.get(practical_name, {}).get(group_name, None)
+                if not group_id:
+                    print(f"Group '{group_name}' not found for practical '{practical_name}'.")
+                    continue
+    
+                # Step 5: Create an assignment override with the calculated submission date
+                data = {
+                    "assignment_override": {
+                        "group_id": group_id,
+                        "due_at": submission_date.isoformat(),
+                        "assign_to_individuals": False  # To assign grades individually within the group
+                    }
+                }
+                
+                override_url = f"{self.canvas_domain}/api/v1/courses/{self.course_id}/assignments/{assignment_id}/overrides"
+                response = requests.post(override_url, headers=headers, json=data)
+    
+                if response.status_code in [200, 201]:
+                    print(f"Assignment '{assignment_name}' (ID: {assignment_id}) successfully assigned to group '{group_name}' in practical '{practical_name}' with due date {submission_date.date()}.")
+                else:
+                    print(f"Failed to assign assignment '{assignment_name}' (ID: {assignment_id}) to group '{group_name}' in practical '{practical_name}'. Response: {response.text}")
+
+
+    def remove_group_assignments(self, assignment_ids):
+        """
+        Removes all group assignments from the specified list of assignments in Canvas by deleting assignment overrides.
+    
+        Args:
+            assignment_ids (list of int): List of assignment IDs from which to remove group assignments.
+    
+        Returns:
+            None
+        """
+        # Define headers inside the function
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+    
+        # Loop through each assignment ID
+        for assignment_id in assignment_ids:
+            # Fetch all overrides for the specified assignment
+            url = f"{self.canvas_domain}/api/v1/courses/{self.course_id}/assignments/{assignment_id}/overrides"
+            response = requests.get(url, headers=headers)
+    
+            if response.status_code != 200:
+                print(f"Failed to fetch overrides for assignment {assignment_id}. Response: {response.text}")
+                continue
+    
+            overrides = response.json()
+    
+            # Iterate through each override and delete if it is a group assignment
+            for override in overrides:
+                if override.get("group_id"):
+                    override_id = override["id"]
+                    delete_url = f"{self.canvas_domain}/api/v1/courses/{self.course_id}/assignments/{assignment_id}/overrides/{override_id}"
+                    delete_response = requests.delete(delete_url, headers=headers)
+    
+                    if delete_response.status_code in [200, 204]:
+                        print(f"Successfully removed group assignment override {override_id} from assignment {assignment_id}.")
+                    else:
+                        print(f"Failed to remove group assignment override {override_id} from assignment {assignment_id}. Response: {delete_response.text}")
+
+
