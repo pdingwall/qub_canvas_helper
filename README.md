@@ -59,6 +59,37 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
   - Creates an ics calendar file from the dataframe (df) to then be imported into Outlook.
   - Ideal usage to follow on using the dataframe for the Calendar class.
 
+### Groups (`CanvasGroupManager`)
+
+- **`create_group_sets(group_sets)`**
+  - Creates multiple group sets within a Canvas course based on a list of group set names.
+  - Outputs a confirmation message for each successfully created group set.
+
+- **`get_all_group_sets()`**
+  - Fetches all group sets within a specific Canvas course.
+  - Returns a DataFrame containing details of all group sets in the course
+
+- **`get_groups_in_set(group_set_id)`**
+  - Fetches all groups within a specified group set.
+  - Returns a list of group names within the specified group set.
+
+- **`create_groups_in_sets(group_set_ids, group_names)`**
+  - Creates groups within multiple specified group sets based on a provided list of group set IDs.
+  - Avoids creating duplicate groups and outputs a confirmation message for each created group.
+
+- **`delete_all_groups_in_set(group_set_id)`**
+  - Deletes all groups within a specified group set in the Canvas course.
+  - Confirms successful deletion of each group.
+
+- **`assign_students_to_groups(student_groups, group_set_mapping, group_mapping)`**
+  - Assigns students to groups within specified group sets based on an Excel file.
+  - Uses mappings of group set names to Canvas group set IDs, and group names to Canvas group IDs.
+  - Outputs messages indicating successful assignments or errors.
+
+- **`get_all_groups(group_set_dict)`**
+  - Fetches all groups for each group set specified in a dictionary.
+  - Returns a nested dictionary mapping group set names to group names and their Canvas group IDs.
+
 ## Requirements
 
 To run this project, you need the following:
