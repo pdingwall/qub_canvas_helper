@@ -332,7 +332,54 @@ class CanvasAssignmentManager:
             # Print error message only if the status code indicates an error
             print(f"Failed to assign assignment {assignment_id} to student {student_name} ({student_id}). Response: {response.json()}")
 
-
+    def check_student_assignment_completions(self, assignment_dict):
+        """
+        Checks if any students in the module are not assigned to the given assignments.
+    
+        Args:
+            assignment_dict (dict): A dictionary mapping assignment names to Canvas assignment IDs.
+    
+        Returns:
+            None: Prints out students not assigned to each assignment.
+        """
+        # Step 1: Get all students in the module
+        df_students = self.get_students_in_module()
+    
+        # Step 2: Loop through each assignment in the dictionary
+        for assignment_name, assignment_id in assignment_dict.items():
+            # API endpoint to get the list of students assigned to the assignment
+            url = f"{self.canvas_domain}/api/v1/courses/{self.course_id}/assignments/{assignment_id}/overrides"
+            headers = {
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json"
+            }
+    
+            # Send the GET request to fetch assignment overrides
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code != 200:
+                print(f"Failed to fetch assignment overrides for '{assignment_name}' (ID: {assignment_id}). Response: {response.text}")
+                continue
+    
+            # Parse the JSON response
+            overrides = response.json()
+    
+            # Extract the list of student Canvas IDs assigned to this assignment
+            assigned_student_ids = set()
+            for override in overrides:
+                student_ids = override.get('student_ids', [])
+                assigned_student_ids.update(student_ids)
+    
+            # Step 3: Identify students not assigned to the current assignment
+            unassigned_students = df_students[~df_students['id'].isin(assigned_student_ids)]
+    
+            # Step 4: Print out unassigned students for the current assignment
+            if not unassigned_students.empty:
+                for _, row in unassigned_students.iterrows():
+                    print(f'Student {row["name"]} (ID: {row["id"]}) is not assigned to {assignment_name} (ID: {assignment_id}).')
+            else:
+                print(f'All students are assigned to {assignment_name} (ID: {assignment_id}).')
+    
 ########################################################## Below are function to work with groups #########################################################
 
     def assign_assignments_to_group_sets(self, assignment_ids, assignments_dict, practicals_and_postlabs_dict, groups_dict, custom_practical_dates, submission_length_days):

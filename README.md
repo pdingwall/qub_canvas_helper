@@ -30,6 +30,11 @@ Example Jupyter Notebooks are provided demonstrating the use of the following fe
 
 - **`assign_assignment_to_student(student_id, student_name, assignment_id, due_date)`**
   - Creates an assignment override for a specific student.
+
+- **`check_unassigned_students(assignment_dict)`**
+  - Iterates over the provided assignments to check if all students in the module are assigned to each assignment.
+  - Outputs a message for each student who is not assigned to a specific assignment in the format: Student "name" ("id") is not assigned to "assignment name" ("assignment id").
+  - Uses the Canvas student ID for verifying the assignment status.
  
 - **`assign_assignments_to_group_sets(assignment_ids, assignments_dict, practicals_and_postlabs_dict, groups_dict, custom_practical_dates, submission_length_days)`**
   - For working with Groups.
