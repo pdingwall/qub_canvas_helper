@@ -92,6 +92,7 @@ class CanvasAssignmentManager:
         df_enrollments = df_enrollments.drop_duplicates(subset='sis_user_id').reset_index(drop = True)
         
         return df_enrollments
+
     
     def check_student_enrollment(self, df_students):
         """
@@ -294,6 +295,69 @@ class CanvasAssignmentManager:
     
                 if assignment_id:
                     self.assign_assignment_to_student(student_id, student_name, assignment_id, assignment_due_date)
+
+
+
+    def assign_students_to_assignments_familiarisation_area(self, df_students, assignment_dict, check_enrollment=True):
+        """
+        THIS IS FOR THE FAMILIARISATION AREA ONLY
+        Assign students to assignments based on the provided DataFrame and assignment dictionary.
+        
+        This function first calls `check_student_enrollment` to ensure all students in the DataFrame are enrolled in the
+        Canvas module. If all students are accounted for, it proceeds with the assignment. Otherwise, it stops execution
+        and outputs the result of `check_student_enrollment`. You can optionally disable this check.
+    
+        Args:
+            df_students (pd.DataFrame): DataFrame containing student information, including assignment codes and due dates.
+            check_enrollment (bool): Whether to check student enrollment before assigning (default is True).
+    
+        Raises:
+            ValueError: If the student or assignment data is invalid or if `check_student_enrollment` identifies discrepancies.
+        """
+        # If enrollment check is enabled, call check_student_enrollment
+        if check_enrollment:
+            enrollment_check_result = self.check_student_enrollment(df_students)
+            
+            if enrollment_check_result != "All students are accounted for.":
+                # If the enrollment check fails, print the result and stop execution
+                print(enrollment_check_result)
+                return
+
+        # Canvas uses 'id' no 'sis_user_id' during override, so this will need to be changed
+        # Fetch students from Canvas to get the mapping of 'sis_user_id' to Canvas 'id'
+        df_canvas_students = self.get_students_in_module()
+
+        # Create a dictionary where 'sis_user_id' is the key and 'id' is the value
+        #df_canvas_students['sis_user_id'] = df_canvas_students['sis_user_id'].astype("int64") # This is the single change to work in the familiarisation area
+        id_mapping_dict = df_canvas_students.set_index('sis_user_id')['id'].to_dict()
+
+        # Map the id values
+        df_students['id'] = df_students['id'].map(id_mapping_dict)
+        df_students.fillna(100, inplace = True) # JSON does not handle NaN and we will get NaN if there are students in excel but not on Canvas
+        df_students['id'] = df_students['id'].astype("int64") # must be int not float
+        
+        ######################## TO CHANGE ############################### THIS IS PROBLEMATIC!!!! ######################################
+        # Proceed with assigning students to assignments if enrollment is fine or the check is disabled
+        assignment_columns = df_students.columns[2:]  # Assuming first two columns are student info, which they might not be!
+    
+        for _, row in df_students.iterrows():
+            student_id = row['id']  # The student ID
+            student_name = row['name']  # The student name
+    
+            for assignment_due_date in assignment_columns:
+                assignment_code = row[assignment_due_date]  # The assignment code (e.g., P1, P2)
+                assignment_id = assignment_dict.get(assignment_code)
+    
+                if assignment_id:
+                    self.assign_assignment_to_student(student_id, student_name, assignment_id, assignment_due_date)
+
+
+
+
+
+
+
+
     
     def assign_assignment_to_student(self, student_id, student_name, assignment_id, due_date):
         """
