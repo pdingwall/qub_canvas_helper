@@ -83,7 +83,12 @@ class CanvasCalendarManager:
         Returns:
             None: Prints responses after creating each event on Canvas.
         """
+        # Inititalize counter for created events
+        created_events_count = 0
+
+        # define count to total # of items
         for index, row in df.iterrows():
+            
             # Construct the title, description, and location
             title = f"{row['Topic'] if pd.notna(row['Topic']) else 'No Topic'}"
             description = f"Supervised by {row['Staff']}" if pd.notna(row['Staff']) else "No additional notes"
@@ -104,7 +109,7 @@ class CanvasCalendarManager:
             # Check for any existing events in the same time slot before creating a new event
             existing_events = self.fetch_course_calendar_events(start_date=start_datetime.strftime('%Y-%m-%d'),
                                                                 end_date=end_datetime.strftime('%Y-%m-%d'))
-    
+
             # Check if there are any existing events and handle conflicts
             if not existing_events.empty:
                 # Convert existing event times to timezone-naive for proper comparison
@@ -139,11 +144,17 @@ class CanvasCalendarManager:
                 start_formatted = pd.to_datetime(response.get('start_at')).strftime("%H:%M on %Y-%m-%d")
                 end_formatted = pd.to_datetime(response.get('end_at')).strftime("%H:%M on %Y-%m-%d")
                 location_name = response.get('location_name')
+                
     
-                print(f"Event created for {event_title}: ID {event_id}, Start: {start_formatted}, End: {end_formatted}, Location: {location_name}")
-            
+                print(f"Event created for {event_title}: ID {event_id}, Start: {start_formatted}, End: {end_formatted}, Location: {location_name}") 
+                # Increment the counter for each successfully created event
+                created_events_count += 1
+
             except Exception as e:
                 print(f"Failed to create event for {title}: {e}")
+
+        # Print the total number of created events at the end
+        print(f"Total number of events created: {created_events_count}")
 
     def fetch_event_by_id(self, event_id):
         """
@@ -250,6 +261,10 @@ class CanvasCalendarManager:
         Raises:
             Exception: If the API request fails.
         """
+
+        # Inititalize counter for created events
+        removed_events_count = 0
+
         url = f"{self.canvas_domain}/api/v1/calendar_events"
         headers = {
             "Authorization": f"Bearer {self.access_token}",
@@ -302,9 +317,11 @@ class CanvasCalendarManager:
     
             if delete_response.status_code == 200:
                 print(f"Successfully removed event {event['title']} (ID: {event_id}) {formatted_time}")
+                removed_events_count += 1
             else:
                 print(f"Failed to remove event {event['title']} (ID: {event_id}) {formatted_time}. Response: {delete_response.json()}")
 
+        print(f"Total number of events deleted: {removed_events_count}")
 
 
 
